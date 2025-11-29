@@ -6,7 +6,6 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 
 import { generateShapes, getShapeNames, COUNT } from './shapes.js';
 import { vertexShader, fragmentShader, createUniforms } from './shaders.js';
-import { HandTracker } from './handTracking.js';
 import { AudioAnalyzer } from './audioAnalyzer.js';
 
 // ============================================
@@ -35,18 +34,11 @@ class Y2KVisualizer {
         this.currentShapeIndex = 0;
 
         // 功能模块
-        this.handTracker = null;
         this.audioAnalyzer = null;
-
-        // UI 元素
-        this.fpsElement = null;
-        this.modeDisplay = null;
-        this.spectrumBars = {};
 
         // 屏幕元素
         this.loadingScreen = null;
         this.startScreen = null;
-        this.uiLayer = null;
 
         // 状态
         this.isStarted = false;
@@ -58,14 +50,12 @@ class Y2KVisualizer {
         // 获取屏幕元素
         this.loadingScreen = document.getElementById('loading-screen');
         this.startScreen = document.getElementById('start-screen');
-        this.uiLayer = document.getElementById('ui-layer');
 
         // 初始化场景（在后台）
         this.initScene();
         this.initParticles();
         this.initPostProcessing();
         this.initControls();
-        this.initUI();
 
         // 开始加载资源
         await this.loadResources();
@@ -83,19 +73,9 @@ class Y2KVisualizer {
             this.audioAnalyzer = new AudioAnalyzer();
 
             await this.audioAnalyzer.loadFromURL('./music.mp3', (progress) => {
-                loadingBar.style.width = `${progress * 0.7}%`;
-                loadingPercent.textContent = `${Math.round(progress * 0.7)}%`;
+                loadingBar.style.width = `${progress}%`;
+                loadingPercent.textContent = `${Math.round(progress)}%`;
             });
-
-            // 初始化手势追踪
-            loadingStatus.textContent = 'INITIALIZING VISION SYSTEM...';
-            loadingBar.style.width = '80%';
-            loadingPercent.textContent = '80%';
-
-            const video = document.getElementById('webcam');
-            const statusElement = document.getElementById('gesture-status');
-            this.handTracker = new HandTracker(video, statusElement);
-            await this.handTracker.init();
 
             // 完成加载
             loadingBar.style.width = '100%';
@@ -140,7 +120,6 @@ class Y2KVisualizer {
 
         setTimeout(() => {
             this.startScreen.classList.add('hidden');
-            this.uiLayer.classList.remove('hidden');
 
             // 初始化事件监听
             this.initEventListeners();
@@ -251,27 +230,8 @@ class Y2KVisualizer {
         this.controls.autoRotateSpeed = 0.3;
     }
 
-    // 初始化 UI
-    initUI() {
-        this.fpsElement = document.getElementById('fps');
-        this.modeDisplay = document.getElementById('mode-display');
-
-        this.spectrumBars = {
-            low: document.getElementById('vis-low'),
-            mid: document.getElementById('vis-mid'),
-            high: document.getElementById('vis-high')
-        };
-    }
-
     // 初始化事件监听
     initEventListeners() {
-        // 滑块控制
-        this.bindSlider('lowRange', 'v-low', (val) => this.uniforms.uLowAmp.value = val);
-        this.bindSlider('midRange', 'v-mid', (val) => this.uniforms.uMidAmp.value = val);
-        this.bindSlider('highRange', 'v-high', (val) => this.uniforms.uHighAmp.value = val);
-        this.bindSlider('sizeRange', 'v-size', (val) => this.uniforms.uBaseSize.value = val);
-        this.bindSlider('glowRange', 'v-glow', (val) => this.bloomPass.strength = val);
-
         // 键盘事件 - 切换形状
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
@@ -283,22 +243,10 @@ class Y2KVisualizer {
         window.addEventListener('resize', () => this.onResize());
     }
 
-    // 绑定滑块
-    bindSlider(sliderId, displayId, callback) {
-        const slider = document.getElementById(sliderId);
-        const display = document.getElementById(displayId);
-        slider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            display.innerText = value.toFixed(1);
-            callback(value);
-        });
-    }
-
     // 切换形状
     switchShape() {
         this.currentShapeIndex = (this.currentShapeIndex + 1) % this.shapeNames.length;
         const shapeName = this.shapeNames[this.currentShapeIndex];
-        this.modeDisplay.innerText = shapeName.toUpperCase();
 
         const shapeData = this.shapes[shapeName];
         for (let i = 0; i < COUNT * 3; i++) {
@@ -318,31 +266,14 @@ class Y2KVisualizer {
     animate(time) {
         requestAnimationFrame((t) => this.animate(t));
 
-        const deltaTime = (time - this.lastTime) / 1000;
-        this.lastTime = time;
-
-        // 更新 FPS
-        if (time % 500 < 20) {
-            this.fpsElement.innerText = Math.round(1 / deltaTime);
-        }
-
         // 更新音频分析
         const frequencies = this.audioAnalyzer.analyze();
-
-        // 更新手势缩放
-        const scale = this.handTracker.updateScale();
 
         // 更新 uniforms
         this.uniforms.uTime.value = time * 0.001;
         this.uniforms.uBass.value = frequencies.bass;
         this.uniforms.uMid.value = frequencies.mid;
         this.uniforms.uHigh.value = frequencies.high;
-        this.uniforms.uHandScale.value = scale;
-
-        // 更新频谱显示
-        this.spectrumBars.low.style.height = (frequencies.bass * 100) + "%";
-        this.spectrumBars.mid.style.height = (frequencies.mid * 100) + "%";
-        this.spectrumBars.high.style.height = (frequencies.high * 100) + "%";
 
         // 平滑过渡粒子位置
         const pos = this.geometry.attributes.position.array;

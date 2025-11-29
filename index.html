@@ -2,15 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Y2K VISUALIZER // V10.0 BORAN MADE</title>
+    <title>Y2K VISUALIZER // BORAN MADE</title>
     <link rel="stylesheet" href="css/styles.css">
 
     <script type="importmap">
         {
             "imports": {
                 "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-                "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
             }
         }
     </script>
@@ -57,67 +56,6 @@
 
     <!-- ========== MAIN VISUALIZER ========== -->
     <div id="canvas-container"></div>
-
-    <div id="ui-layer" class="hidden">
-        <div class="top-row">
-            <!-- 左上角面板 - 标题和摄像头 -->
-            <div class="panel">
-                <h1>BORAN MADE</h1>
-                <div style="font-size: 0.8rem; color: rgba(0,243,255,0.7); display:flex; justify-content:space-between;">
-                    <span>FPS: <span id="fps" style="color:#fff;">--</span></span>
-                    <span>ENTITIES: 36K</span>
-                </div>
-
-                <div id="webcam-wrapper">
-                    <video id="webcam" autoplay playsinline></video>
-                    <div id="gesture-status">VISION SYSTEM INITIALIZING...</div>
-                </div>
-            </div>
-
-            <!-- 右上角面板 - 几何引擎和频谱 -->
-            <div class="panel" style="text-align: right; min-width: 200px;">
-                <div class="section-title">GEOMETRY ENGINE</div>
-                <div id="mode-display">WORMHOLE</div>
-                <div style="font-size: 0.75rem; margin-top:5px; color:rgba(255,255,255,0.5);">PRESS [SPACE] TO MORPH</div>
-
-                <div style="margin-top: 20px;">
-                    <div class="section-title" style="text-align: right;">SPECTRAL ANALYZER</div>
-                    <div class="spectrum">
-                        <div id="vis-low" class="spec-bar"></div>
-                        <div id="vis-mid" class="spec-bar"></div>
-                        <div id="vis-high" class="spec-bar"></div>
-                    </div>
-                    <div style="font-size: 0.7rem; display:flex; justify-content:flex-end; gap:25px; color:rgba(255,255,255,0.5); margin-top:2px;">
-                        <span>L</span><span>M</span><span>H</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 底部面板 - 控制台 -->
-        <div class="panel" style="margin-top: auto;">
-            <div class="section-title">// CONTROL_CONSOLE</div>
-
-            <div class="control-group">
-                <label>LOW FREQ [BASS] <span id="v-low" class="val-display">2.0</span></label>
-                <input type="range" id="lowRange" min="0" max="5.0" step="0.1" value="2.0">
-
-                <label>MID FREQ [SWIRL] <span id="v-mid" class="val-display">2.0</span></label>
-                <input type="range" id="midRange" min="0" max="5.0" step="0.1" value="2.0">
-
-                <label>HIGH FREQ [SHIMMER] <span id="v-high" class="val-display">2.0</span></label>
-                <input type="range" id="highRange" min="0" max="5.0" step="0.1" value="2.0">
-
-                <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;"></div>
-
-                <label>PARTICLE DENSITY <span id="v-size" class="val-display">2.0</span></label>
-                <input type="range" id="sizeRange" min="1.0" max="5.0" step="0.1" value="2.0">
-
-                <label>BLOOM INTENSITY <span id="v-glow" class="val-display">1.8</span></label>
-                <input type="range" id="glowRange" min="0.5" max="3.5" step="0.1" value="1.8">
-            </div>
-        </div>
-    </div>
 
     <script type="module" src="js/app.js"></script>
 </body>
