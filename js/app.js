@@ -281,7 +281,7 @@ class Y2KVisualizer {
         // 更新音频分析
         const frequencies = this.audioAnalyzer.analyze();
 
-        // 更新手势缩放
+        // 更新手势控制
         const scale = this.handTracker.updateScale();
 
         // 手掌位置控制自动旋转速度和方向
@@ -298,6 +298,21 @@ class Y2KVisualizer {
             // 没有检测到手时恢复默认自动旋转
             this.controls.autoRotateSpeed = 0.3;
         }
+
+        // 手势控制相机距离（张开拉近，握拳拉远）
+        // scale: 0.2(握拳) ~ 1.0(正常) ~ 1.6(张开)
+        // 映射到距离: 2200(远) ~ 1800(默认) ~ 1000(近)
+        const targetDistance = 1800 + (1 - scale) * 800;
+
+        // 获取当前相机球坐标
+        const spherical = new THREE.Spherical();
+        spherical.setFromVector3(this.camera.position);
+
+        // 平滑过渡到目标距离
+        spherical.radius += (targetDistance - spherical.radius) * 0.05;
+
+        // 更新相机位置
+        this.camera.position.setFromSpherical(spherical);
 
         // 更新 uniforms
         this.uniforms.uTime.value = time * 0.001;
