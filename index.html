@@ -9,12 +9,16 @@
         {
             "imports": {
                 "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"
             }
         }
     </script>
 </head>
 <body>
+
+    <!-- 隐藏的视频元素用于手势追踪 -->
+    <video id="webcam" autoplay playsinline style="display: none;"></video>
 
     <!-- ========== LOADING SCREEN ========== -->
     <div id="loading-screen">

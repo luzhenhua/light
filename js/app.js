@@ -6,6 +6,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 
 import { generateShapes, getShapeNames, COUNT } from './shapes.js';
 import { vertexShader, fragmentShader, createUniforms } from './shaders.js';
+import { HandTracker } from './handTracking.js';
 import { AudioAnalyzer } from './audioAnalyzer.js';
 
 // ============================================
@@ -34,6 +35,7 @@ class Y2KVisualizer {
         this.currentShapeIndex = 0;
 
         // 功能模块
+        this.handTracker = null;
         this.audioAnalyzer = null;
 
         // 屏幕元素
@@ -73,9 +75,18 @@ class Y2KVisualizer {
             this.audioAnalyzer = new AudioAnalyzer();
 
             await this.audioAnalyzer.loadFromURL('./music.mp3', (progress) => {
-                loadingBar.style.width = `${progress}%`;
-                loadingPercent.textContent = `${Math.round(progress)}%`;
+                loadingBar.style.width = `${progress * 0.7}%`;
+                loadingPercent.textContent = `${Math.round(progress * 0.7)}%`;
             });
+
+            // 初始化手势追踪
+            loadingStatus.textContent = 'INITIALIZING VISION SYSTEM...';
+            loadingBar.style.width = '80%';
+            loadingPercent.textContent = '80%';
+
+            const video = document.getElementById('webcam');
+            this.handTracker = new HandTracker(video);
+            await this.handTracker.init();
 
             // 完成加载
             loadingBar.style.width = '100%';
@@ -269,11 +280,15 @@ class Y2KVisualizer {
         // 更新音频分析
         const frequencies = this.audioAnalyzer.analyze();
 
+        // 更新手势缩放
+        const scale = this.handTracker.updateScale();
+
         // 更新 uniforms
         this.uniforms.uTime.value = time * 0.001;
         this.uniforms.uBass.value = frequencies.bass;
         this.uniforms.uMid.value = frequencies.mid;
         this.uniforms.uHigh.value = frequencies.high;
+        this.uniforms.uHandScale.value = scale;
 
         // 平滑过渡粒子位置
         const pos = this.geometry.attributes.position.array;
