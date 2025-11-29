@@ -287,13 +287,12 @@ class Y2KVisualizer {
         if (this.handTracker.isTracking()) {
             const palm = this.handTracker.getPalmPosition();
 
-            // 手掌位置映射到旋转速度（中间慢，边缘快）
+            // 手掌位置映射到旋转速度
             // palm.x: 0=左边, 0.5=中间, 1=右边
             const offsetX = (palm.x - 0.5) * 2; // -1 到 1
 
-            // 根据手掌水平位置控制旋转方向和速度
-            // 手在左边：向左转，手在右边：向右转，手在中间：几乎不转
-            this.controls.autoRotateSpeed = offsetX * 2.0;
+            // 加大旋转速度，让效果更明显
+            this.controls.autoRotateSpeed = offsetX * 8.0;
         } else {
             // 没有检测到手时恢复默认自动旋转
             this.controls.autoRotateSpeed = 0.3;
