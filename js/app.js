@@ -283,6 +283,30 @@ class Y2KVisualizer {
         // 更新手势缩放
         const scale = this.handTracker.updateScale();
 
+        // 手掌移动控制视角旋转
+        if (this.handTracker.isTracking()) {
+            const velocity = this.handTracker.getPalmVelocity();
+            // 水平移动控制水平旋转（azimuth）
+            // 垂直移动控制垂直旋转（polar）
+            const sensitivity = 3.0; // 灵敏度
+            this.controls.autoRotateSpeed = 0.3 + velocity.x * sensitivity * 10;
+
+            // 直接调整相机的球坐标角度
+            const spherical = new THREE.Spherical();
+            spherical.setFromVector3(this.camera.position);
+            spherical.theta -= velocity.x * sensitivity; // 水平旋转
+            spherical.phi += velocity.y * sensitivity;   // 垂直旋转
+
+            // 限制垂直角度范围
+            spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+
+            this.camera.position.setFromSpherical(spherical);
+            this.camera.lookAt(0, 0, 0);
+        } else {
+            // 没有检测到手时恢复默认自动旋转速度
+            this.controls.autoRotateSpeed = 0.3;
+        }
+
         // 更新 uniforms
         this.uniforms.uTime.value = time * 0.001;
         this.uniforms.uBass.value = frequencies.bass;

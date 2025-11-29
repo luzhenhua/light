@@ -6,8 +6,16 @@ export class HandTracker {
         this.video = videoElement;
         this.handLandmarker = null;
         this.lastVideoTime = -1;
+
+        // 缩放控制
         this.targetScale = 1.0;
         this.currentScale = 1.0;
+
+        // 手掌位置追踪（用于视角控制）
+        this.palmPosition = { x: 0.5, y: 0.5 }; // 归一化坐标 (0-1)
+        this.lastPalmPosition = { x: 0.5, y: 0.5 };
+        this.palmVelocity = { x: 0, y: 0 }; // 手掌移动速度
+        this.isHandDetected = false;
     }
 
     // 初始化视觉系统
@@ -61,9 +69,14 @@ export class HandTracker {
             const result = this.handLandmarker.detectForVideo(this.video, performance.now());
 
             if (result.landmarks.length > 0) {
+                this.isHandDetected = true;
                 this.processHandLandmarks(result.landmarks[0]);
             } else {
+                this.isHandDetected = false;
                 this.targetScale = 1.0;
+                // 手离开时速度衰减
+                this.palmVelocity.x *= 0.9;
+                this.palmVelocity.y *= 0.9;
             }
         }
 
@@ -73,9 +86,26 @@ export class HandTracker {
     // 处理手部关键点
     processHandLandmarks(landmarks) {
         const wrist = landmarks[0];
+        const middleFingerBase = landmarks[9]; // 中指根部，更稳定的手掌中心参考
         const fingerTips = [landmarks[4], landmarks[8], landmarks[12], landmarks[16], landmarks[20]];
 
-        // 计算指尖到手腕的平均距离
+        // 计算手掌中心位置（使用手腕和中指根部的平均值）
+        const palmX = (wrist.x + middleFingerBase.x) / 2;
+        const palmY = (wrist.y + middleFingerBase.y) / 2;
+
+        // 保存上一帧位置
+        this.lastPalmPosition.x = this.palmPosition.x;
+        this.lastPalmPosition.y = this.palmPosition.y;
+
+        // 更新当前位置（注意：x 需要镜像，因为摄像头是镜像的）
+        this.palmPosition.x = 1 - palmX;
+        this.palmPosition.y = palmY;
+
+        // 计算移动速度（用于视角控制）
+        this.palmVelocity.x = (this.palmPosition.x - this.lastPalmPosition.x) * 2;
+        this.palmVelocity.y = (this.palmPosition.y - this.lastPalmPosition.y) * 2;
+
+        // 计算指尖到手腕的平均距离（用于缩放控制）
         let totalDistance = 0;
         fingerTips.forEach(tip => {
             totalDistance += Math.sqrt(
@@ -106,5 +136,20 @@ export class HandTracker {
     // 获取当前缩放值
     getScale() {
         return this.currentScale;
+    }
+
+    // 获取手掌移动速度（用于控制视角）
+    getPalmVelocity() {
+        return this.palmVelocity;
+    }
+
+    // 获取手掌位置
+    getPalmPosition() {
+        return this.palmPosition;
+    }
+
+    // 检查手是否被检测到
+    isTracking() {
+        return this.isHandDetected;
     }
 }
