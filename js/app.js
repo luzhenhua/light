@@ -158,7 +158,7 @@ class Y2KVisualizer {
             1,
             10000
         );
-        this.camera.position.set(0, 100, 900);
+        this.camera.position.set(0, 200, 1800);
 
         // 创建渲染器
         this.renderer = new THREE.WebGLRenderer({
@@ -184,8 +184,9 @@ class Y2KVisualizer {
         const colors = new Float32Array(COUNT * 3);
         const sizes = new Float32Array(COUNT);
 
-        // 初始化数据
-        const initialShape = this.shapes.wormhole;
+        // 初始化数据（默认使用 fibonacci_sphere）
+        const initialShape = this.shapes.fibonacci_sphere;
+        this.currentShapeIndex = 1; // fibonacci_sphere 是第二个
         for (let i = 0; i < COUNT * 3; i++) {
             this.positions[i] = initialShape[i];
             this.targetPositions[i] = initialShape[i];
