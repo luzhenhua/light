@@ -258,3 +258,47 @@ body {
     from { opacity: 1; }
     to { opacity: 0; visibility: hidden; }
 }
+
+/* 全屏按钮 */
+#fullscreen-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 100;
+    opacity: 0.3;
+    transition: opacity 0.3s, border-color 0.3s;
+}
+
+#fullscreen-btn:hover {
+    opacity: 0.8;
+    border-color: rgba(0, 243, 255, 0.5);
+}
+
+#fullscreen-btn::before,
+#fullscreen-btn::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+#fullscreen-btn::before {
+    top: 6px;
+    left: 6px;
+    border-right: none;
+    border-bottom: none;
+}
+
+#fullscreen-btn::after {
+    bottom: 6px;
+    right: 6px;
+    border-left: none;
+    border-top: none;
+}

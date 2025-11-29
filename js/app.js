@@ -251,6 +251,15 @@ class Y2KVisualizer {
             }
         });
 
+        // 全屏按钮
+        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
         // 窗口调整
         window.addEventListener('resize', () => this.onResize());
     }
