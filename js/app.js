@@ -43,20 +43,116 @@ class Y2KVisualizer {
         this.modeDisplay = null;
         this.spectrumBars = {};
 
-        // 性能追踪
+        // 屏幕元素
+        this.loadingScreen = null;
+        this.startScreen = null;
+        this.uiLayer = null;
+
+        // 状态
+        this.isStarted = false;
         this.lastTime = 0;
     }
 
     // 初始化应用
     async init() {
+        // 获取屏幕元素
+        this.loadingScreen = document.getElementById('loading-screen');
+        this.startScreen = document.getElementById('start-screen');
+        this.uiLayer = document.getElementById('ui-layer');
+
+        // 初始化场景（在后台）
         this.initScene();
         this.initParticles();
         this.initPostProcessing();
         this.initControls();
         this.initUI();
-        await this.initModules();
-        this.initEventListeners();
-        this.animate(0);
+
+        // 开始加载资源
+        await this.loadResources();
+    }
+
+    // 加载资源
+    async loadResources() {
+        const loadingBar = document.getElementById('loading-bar');
+        const loadingStatus = document.getElementById('loading-status');
+        const loadingPercent = document.getElementById('loading-percent');
+
+        try {
+            // 加载音频
+            loadingStatus.textContent = 'LOADING AUDIO...';
+            this.audioAnalyzer = new AudioAnalyzer();
+
+            await this.audioAnalyzer.loadFromURL('./music.mp3', (progress) => {
+                loadingBar.style.width = `${progress * 0.7}%`;
+                loadingPercent.textContent = `${Math.round(progress * 0.7)}%`;
+            });
+
+            // 初始化手势追踪
+            loadingStatus.textContent = 'INITIALIZING VISION SYSTEM...';
+            loadingBar.style.width = '80%';
+            loadingPercent.textContent = '80%';
+
+            const video = document.getElementById('webcam');
+            const statusElement = document.getElementById('gesture-status');
+            this.handTracker = new HandTracker(video, statusElement);
+            await this.handTracker.init();
+
+            // 完成加载
+            loadingBar.style.width = '100%';
+            loadingPercent.textContent = '100%';
+            loadingStatus.textContent = 'SYSTEM READY';
+
+            // 短暂延迟后显示开始屏幕
+            await this.delay(500);
+            this.showStartScreen();
+
+        } catch (error) {
+            console.error('Loading failed:', error);
+            loadingStatus.textContent = 'LOADING ERROR - PLEASE REFRESH';
+        }
+    }
+
+    // 显示开始屏幕
+    showStartScreen() {
+        this.loadingScreen.classList.add('fade-out');
+
+        setTimeout(() => {
+            this.loadingScreen.classList.add('hidden');
+            this.startScreen.classList.remove('hidden');
+
+            // 绑定开始按钮
+            document.getElementById('start-btn').addEventListener('click', () => {
+                this.startExperience();
+            });
+        }, 500);
+    }
+
+    // 开始体验
+    startExperience() {
+        if (this.isStarted) return;
+        this.isStarted = true;
+
+        // 播放音频
+        this.audioAnalyzer.play();
+
+        // 淡出开始屏幕
+        this.startScreen.classList.add('fade-out');
+
+        setTimeout(() => {
+            this.startScreen.classList.add('hidden');
+            this.uiLayer.classList.remove('hidden');
+
+            // 初始化事件监听
+            this.initEventListeners();
+
+            // 开始动画
+            this.animate(0);
+        }, 500);
+    }
+
+    // 延迟工具函数
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     // 初始化场景
@@ -167,18 +263,6 @@ class Y2KVisualizer {
         };
     }
 
-    // 初始化功能模块
-    async initModules() {
-        // 手势追踪
-        const video = document.getElementById('webcam');
-        const statusElement = document.getElementById('gesture-status');
-        this.handTracker = new HandTracker(video, statusElement);
-        await this.handTracker.init();
-
-        // 音频分析
-        this.audioAnalyzer = new AudioAnalyzer();
-    }
-
     // 初始化事件监听
     initEventListeners() {
         // 滑块控制
@@ -187,14 +271,6 @@ class Y2KVisualizer {
         this.bindSlider('highRange', 'v-high', (val) => this.uniforms.uHighAmp.value = val);
         this.bindSlider('sizeRange', 'v-size', (val) => this.uniforms.uBaseSize.value = val);
         this.bindSlider('glowRange', 'v-glow', (val) => this.bloomPass.strength = val);
-
-        // 音频文件输入
-        document.getElementById('audioInput').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                this.audioAnalyzer.loadAudioFile(file).catch(console.error);
-            }
-        });
 
         // 键盘事件 - 切换形状
         window.addEventListener('keydown', (e) => {

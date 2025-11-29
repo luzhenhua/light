@@ -17,9 +17,48 @@
 </head>
 <body>
 
+    <!-- ========== LOADING SCREEN ========== -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <div class="loading-title">Y2K_VISUALIZER</div>
+            <div class="loading-subtitle">// BORAN MADE</div>
+
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loading-bar"></div>
+            </div>
+            <div class="loading-status" id="loading-status">INITIALIZING SYSTEM...</div>
+            <div class="loading-percent" id="loading-percent">0%</div>
+        </div>
+
+        <div class="loading-decor loading-decor-tl"></div>
+        <div class="loading-decor loading-decor-br"></div>
+    </div>
+
+    <!-- ========== START SCREEN ========== -->
+    <div id="start-screen" class="hidden">
+        <div class="start-content">
+            <div class="start-title">Y2K_VISUALIZER</div>
+            <div class="start-version">V10.0</div>
+
+            <button id="start-btn" class="start-button">
+                <span class="btn-bracket">[</span>
+                <span class="btn-text">ENTER_EXPERIENCE</span>
+                <span class="btn-bracket">]</span>
+            </button>
+
+            <div class="start-hint">CLICK TO INITIALIZE AUDIO</div>
+        </div>
+
+        <div class="start-corner start-corner-tl"></div>
+        <div class="start-corner start-corner-tr"></div>
+        <div class="start-corner start-corner-bl"></div>
+        <div class="start-corner start-corner-br"></div>
+    </div>
+
+    <!-- ========== MAIN VISUALIZER ========== -->
     <div id="canvas-container"></div>
 
-    <div id="ui-layer">
+    <div id="ui-layer" class="hidden">
         <div class="top-row">
             <!-- 左上角面板 - 标题和摄像头 -->
             <div class="panel">
@@ -55,14 +94,9 @@
             </div>
         </div>
 
-        <!-- 底部面板 - 音频控制 -->
+        <!-- 底部面板 - 控制台 -->
         <div class="panel" style="margin-top: auto;">
-            <div class="section-title">// AUDIO_MIXER_CONSOLE</div>
-
-            <label class="file-btn">
-                [ UPLOAD_AUDIO_SOURCE ]
-                <input type="file" id="audioInput" accept="audio/mp3, audio/wav">
-            </label>
+            <div class="section-title">// CONTROL_CONSOLE</div>
 
             <div class="control-group">
                 <label>LOW FREQ [BASS] <span id="v-low" class="val-display">2.0</span></label>

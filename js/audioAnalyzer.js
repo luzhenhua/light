@@ -4,56 +4,89 @@ export class AudioAnalyzer {
         this.audioContext = null;
         this.analyser = null;
         this.dataArray = null;
+        this.source = null;
 
         // 平滑后的频率值
         this.smoothBass = 0;
         this.smoothMid = 0;
         this.smoothHigh = 0;
+
+        // 加载进度
+        this.loadProgress = 0;
+        this.isLoaded = false;
     }
 
-    // 加载音频文件
-    loadAudioFile(file) {
-        return new Promise((resolve, reject) => {
-            if (!file) {
-                reject(new Error("No file provided"));
-                return;
+    // 从 URL 加载音频（支持进度回调）
+    async loadFromURL(url, onProgress) {
+        try {
+            // 使用 fetch 获取音频并追踪进度
+            const response = await fetch(url);
+            const contentLength = response.headers.get('content-length');
+            const total = parseInt(contentLength, 10);
+            let loaded = 0;
+
+            const reader = response.body.getReader();
+            const chunks = [];
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                chunks.push(value);
+                loaded += value.length;
+
+                this.loadProgress = total ? (loaded / total) * 100 : 50;
+                if (onProgress) onProgress(this.loadProgress);
             }
 
-            const reader = new FileReader();
+            // 合并所有块
+            const audioData = new Uint8Array(loaded);
+            let position = 0;
+            for (const chunk of chunks) {
+                audioData.set(chunk, position);
+                position += chunk.length;
+            }
 
-            reader.onload = async (event) => {
-                try {
-                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const audioBuffer = await this.audioContext.decodeAudioData(event.target.result);
+            // 创建音频上下文
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const audioBuffer = await this.audioContext.decodeAudioData(audioData.buffer);
 
-                    // 创建音频源
-                    const source = this.audioContext.createBufferSource();
-                    source.buffer = audioBuffer;
+            // 创建音频源
+            this.source = this.audioContext.createBufferSource();
+            this.source.buffer = audioBuffer;
+            this.source.loop = true; // 循环播放
 
-                    // 创建分析器
-                    this.analyser = this.audioContext.createAnalyser();
-                    this.analyser.fftSize = 2048;
-                    this.analyser.smoothingTimeConstant = 0.8;
+            // 创建分析器
+            this.analyser = this.audioContext.createAnalyser();
+            this.analyser.fftSize = 2048;
+            this.analyser.smoothingTimeConstant = 0.8;
 
-                    // 连接节点
-                    source.connect(this.analyser);
-                    this.analyser.connect(this.audioContext.destination);
+            // 连接节点
+            this.source.connect(this.analyser);
+            this.analyser.connect(this.audioContext.destination);
 
-                    // 创建数据数组
-                    this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+            // 创建数据数组
+            this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
 
-                    // 开始播放
-                    source.start(0);
+            this.isLoaded = true;
+            this.loadProgress = 100;
 
-                    resolve();
-                } catch (error) {
-                    reject(error);
-                }
-            };
+            return true;
+        } catch (error) {
+            console.error('Audio load error:', error);
+            throw error;
+        }
+    }
 
-            reader.onerror = () => reject(new Error("File read error"));
-            reader.readAsArrayBuffer(file);
-        });
+    // 开始播放
+    play() {
+        if (this.source && this.audioContext) {
+            // 恢复音频上下文（处理浏览器自动播放策略）
+            if (this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+            }
+            this.source.start(0);
+        }
     }
 
     // 分析频率数据
@@ -124,5 +157,10 @@ export class AudioAnalyzer {
     // 检查是否已初始化
     isReady() {
         return this.analyser !== null;
+    }
+
+    // 获取加载进度
+    getLoadProgress() {
+        return this.loadProgress;
     }
 }
